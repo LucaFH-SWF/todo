@@ -1,0 +1,21 @@
+//Alle Todos abfragen
+curl http://localhost:3000/api/todos
+
+//neues Todo anlegen
+curl -X POST http://localhost:3000/api/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test-Todo","due":"2025-06-01T00:00:00.000Z","status":0}'
+
+//Todo updaten
+curl -X PUT http://localhost:3000/api/todos/683882b9be5ce037f31c8776 \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Geändertes Todo","status":1}'
+
+//ein Todo abfragen
+curl http://localhost:3000/api/todos/683882b9be5ce037f31c8776
+
+//Todo löschen
+curl -i -X DELETE http://localhost:3000/api/todos/683882b9be5ce037f31c8776
+
+//Alle Todos abfragen
+curl http://localhost:3000/api/todos

@@ -38,7 +38,7 @@ function showTodos() {
 
         let todoItem = document.createElement('div');
         todoItem.className = 'todo-item';
-        todoItem.dataset.id = todo[i].id;
+        todoItem.dataset.id = todo[i]._id;
 
         const dueDate = new Date(todo[i].due);
         const formattedDate = dueDate.toLocaleString('de-DE', {
@@ -49,6 +49,10 @@ function showTodos() {
             minute: '2-digit'
         });
 
+        if (typeof todo[i].text === 'undefined' || todo[i].text === undefined) {
+            todo[i].text = '';
+        }
+
         todoItem.insertAdjacentHTML('beforeend', `
             <div>
                 <header><h2>${todo[i].title}</h2></header>
@@ -56,37 +60,46 @@ function showTodos() {
                 <p class="todo-text">${todo[i].text}</p>
             </div>
             <div class="todo-bar">
-                <select name="status" class="status" id="status" onchange="updateTodoStatus(${todo[i].id}, this.value)">
+                <select name="status" class="status" id="status" onchange="updateTodoStatus('${todo[i]._id}', this.value)">
                     <option value="open" ${todo[i].status === 'open' ? 'selected' : ''}>offen</option>
                     <option value="doing" ${todo[i].status === 'doing' ? 'selected' : ''}>in Arbeit</option>
                     <option value="done" ${todo[i].status === 'done' ? 'selected' : ''}>erledigt</option>
                 </select>
-                <button class="delete" onclick="deleteTodo(${todo[i].id})">Löschen</button>
-                <button class="edit" onclick="editTodo(${todo[i].id})">Bearbeiten</button>
+                <button class="delete" onclick="deleteTodo('${todo[i]._id}')">Löschen</button>
+                <button class="edit" onclick="editTodo('${todo[i]._id}')">Bearbeiten</button>
             </div>
         `);
-
         
         main.appendChild(todoItem);
     }
-    saveLocalStorage();
 }
 
-function saveLocalStorage() {
-    localStorage.setItem('todos', JSON.stringify(TODOS));
-}
+async function updateTodoStatus(id, status) {
+    const todo = TODOS.find(todo => todo._id === id);
+    if (!todo) {
+        console.log(`Todo mit ID ${id} nicht gefunden.`);
+        return;
+    }
 
-function updateTodoStatus(id, status) {
-    const todo = TODOS.find(todo => todo.id === id);
-    if (todo) {
+    let title = todo.title;
+    let due = todo.due;
+    let text = todo.text;
+    
+    let response = await fetch(`/api/todos/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({title, due, text, status})
+    });
+    
+    if(response.ok) {
         todo.status = status;
         showTodos();
-    } else {
-        console.log(`Todo with ID ${id} not found.`);
     }
 }
 
-function addTodo() {
+async function addTodo() {
     let Aufgabe = document.getElementById('Aufgabe').value;
     let Datum = document.getElementById('Datum').value;
     let  Notiz = document.getElementById('Notiz').value;
@@ -97,12 +110,24 @@ function addTodo() {
     }
 
     const newTodo = {
-        id: Date.now(),
         title: Aufgabe,
         due: Datum,
         text: Notiz,
         status: 'open'
     };
+
+    let response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newTodo)
+    });
+
+    if(response.ok) {
+        const createdTodo = await response.json();
+        newTodo._id = createdTodo._id; // ID vom Server erhalten
+    }
 
     document.getElementById('Datum').value = '';
     document.getElementById('Aufgabe').value = '';
@@ -112,22 +137,30 @@ function addTodo() {
     showTodos();
 }
 
-function deleteTodo(id) {
-    const todoIndex = TODOS.findIndex(todo => todo.id === id);
-    if (todoIndex !== -1) {
-        TODOS.splice(todoIndex, 1);
+async function deleteTodo(id) {
+    let response = await fetch(`/api/todos/${id}`, {
+        method: 'DELETE'
+    });
 
-        let elem = document.querySelector(`[data-id='${id}']`);
-        elem.remove();
+    if(response.ok) {
+        let todoIndex = TODOS.findIndex(todo => todo._id === id);
+        if (todoIndex !== -1) {
+            TODOS.splice(todoIndex, 1);
 
-        saveLocalStorage();
-    } else {
-        console.log(`Todo with ID ${id} not found.`);
+            let elem = document.querySelector(`[data-id='${id}']`);
+            elem.remove();
+        }
+        else {
+            console.log(`Todo with ID ${id} not found.`);
+        }
+    }
+    else {
+        console.log('Fehler beim Löschen der Aufgabe:', response.statusText);
     }
 }
 
 function editTodo(id) {
-    const todo = TODOS.find(todo => todo.id === id);
+    const todo = TODOS.find(todo => todo._id === id);
     if (todo) {
         let elem = document.querySelector(`[data-id='${id}']`);
         elem.innerHTML = '';
@@ -141,7 +174,7 @@ function editTodo(id) {
                 <input type="text" id="editTitle" value="${todo.title}">
                 <input type="datetime-local" id="editDue" value="${formattedDate}">
                 <textarea id="editText">${todo.text}</textarea>
-                <button onclick="saveEdit(${id})">Speichern</button>
+                <button onclick="saveEdit('${id}')">Speichern</button>
             </div>
         `);
 
@@ -153,17 +186,35 @@ function editTodo(id) {
     }
 }
 
-function saveEdit(id) {
-    const todo = TODOS.find(todo => todo.id === id);
-    if (todo) {
-        todo.title = document.getElementById('editTitle').value;
-        todo.due = document.getElementById('editDue').value;
-        todo.text = document.getElementById('editText').value;
-        showTodos();
-        //document.getElementById('editDue').disabled = true;
-    } else {
-        console.log(`Todo with ID ${id} not found.`);
+async function saveEdit(id) {
+    let title = document.getElementById('editTitle').value;
+    let due = document.getElementById('editDue').value;
+    let text = document.getElementById('editText').value;
+
+    let response = await fetch(`/api/todos/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title, due, text })
+    });
+
+    if(response.ok) {
+        const todo = TODOS.find(todo => todo._id === id);
+        if (todo) {
+            todo.title = title;
+            todo.due = due;
+            todo.text = text;
+            showTodos();
+            //document.getElementById('editDue').disabled = true;
+        } else {
+            console.log(`Todo with ID ${id} not found.`);
+        }
     }
+    else {
+        console.log('Fehler beim Speichern der Aufgabe:', response.statusText);
+    }
+    
 }
 
 //erledigte Aufgaben ausblenden

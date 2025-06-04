@@ -206,7 +206,6 @@ async function saveEdit(id) {
             todo.due = due;
             todo.text = text;
             showTodos();
-            //document.getElementById('editDue').disabled = true;
         } else {
             console.log(`Todo with ID ${id} not found.`);
         }

@@ -1,0 +1,115 @@
+.grid {
+    display: grid;
+    grid-template-columns: min-content auto;
+    gap: 20px;
+}
+
+.grid-item-form {
+    background-color: #f0f0f0;
+    width: max-content;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.grid-item-main {
+    background-color: #f0f0f0;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#toggleDoneBtn {
+    width: 100%;
+    margin-top: 20px;
+}
+
+textarea {
+    resize: none;
+}
+
+label {
+    font-weight: bold;
+}
+
+/* label über input anzeigen */
+input,
+label {
+    display: block;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.todo-item {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.todo-item:last-child {
+    border-bottom: none;
+}
+
+.todo-item:hover {
+    background-color: #e0e0e0;
+}
+
+.todo-text {
+    font-family: sans-serif;
+}
+
+.todo-bar {
+    display: flex;
+    justify-content: right;
+    gap: 10px;
+}
+
+.status {
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.delete {
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit {
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#editTitle {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    width: 100%;
+}
+
+#editDue {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    width: 100%;
+}
+
+#editText{
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    width: 100%;
+}

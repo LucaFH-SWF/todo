@@ -1,40 +1,11 @@
-let TODOS = [
-    {
-        id: 1715670949844,
-        title: 'Aufgabe 4 abgeben',
-        due: '2021-05-21T10:00:00.000Z',
-        text: 'Aufgabe 4 abgeben',
-        status: 'done'
-    },
-    {
-        id: 1715670971040,
-        title: 'Aufgabe 6 abgeben',
-        due: '2021-06-08T10:00:00.000Z',
-        text: 'Aufgabe 6 abgeben',
-        status: 'doing'
-    },
-    {
-        id: 1715670972068,
-        title: 'ToDo-Anwendung fertig stellen',
-        due: '2021-06-22T10:00:00.000Z',
-        text: 'ToDo-Anwendung fertig stellen',
-        status: 'open'
-    },
-    {
-        id: 1715670971070,
-        title: 'Für die Klausur lernen',
-        due: '2021-07-01T11:00:00.000Z',
-        text: 'Für die Klausur lernen',
-        status: 'open'
-    }
-];
+let TODOS = [];
 
 var showDone = true;
 
-function init() {
-    let storedTodos = localStorage.getItem('todos');
-    if (storedTodos) {
-        TODOS = JSON.parse(storedTodos);
+async function init() {
+    let response = await fetch('/api/todos');
+    if (response.ok) {
+        TODOS = await response.json();
     }
 
     showTodos();

@@ -11,7 +11,7 @@ app.use(express.json());
 // Alle ToDos abrufen
 app.get('/api/todos', api.getTodos);
 
-// Alle ToDos abrufen
+// ein ToDo abrufen
 app.get('/api/todos/:id', api.getTodo);
 
 // Neues ToDo anlegen

@@ -127,14 +127,18 @@ async function addTodo() {
     if(response.ok) {
         const createdTodo = await response.json();
         newTodo._id = createdTodo._id; // ID vom Server erhalten
+        TODOS.push(newTodo);
+        
+        document.getElementById('Datum').value = '';
+        document.getElementById('Aufgabe').value = '';
+        document.getElementById('Notiz').value = '';
+        
+        showTodos();
+    }
+    else {
+        console.log('Fehler beim Hinzufügen der Aufgabe:', response.statusText);
     }
 
-    document.getElementById('Datum').value = '';
-    document.getElementById('Aufgabe').value = '';
-    document.getElementById('Notiz').value = '';
-
-    TODOS.push(newTodo);
-    showTodos();
 }
 
 async function deleteTodo(id) {

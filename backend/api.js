@@ -36,7 +36,7 @@ const api = {
         if (!inserted) {
             return res.status(500).json({ error: 'Fehler beim Anlegen des ToDos' });
         }
-        res.json(inserted);
+        res.status(201).json(inserted);
     },
     
     // ToDo aktualisieren

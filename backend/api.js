@@ -30,7 +30,7 @@ const api = {
         const newTodo = {
             title,
             due,
-            status: status ?? 0
+            status: status ?? 'open'
         };
         const inserted = await db.insert(newTodo);
         if (!inserted) {

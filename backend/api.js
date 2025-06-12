@@ -26,6 +26,11 @@ const api = {
     
     // Neues ToDo anlegen
     newTodo: async function(req, res) {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
         const { title, due, status } = req.body;
         const newTodo = {
             title,
@@ -41,6 +46,11 @@ const api = {
     
     // ToDo aktualisieren
     updateTodo: async function(req, res) {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+        
         const id = req.params.id;
         const updated = await db.update(id, req.body);
         if (updated.modifiedCount > 0) {

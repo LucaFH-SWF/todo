@@ -1,5 +1,7 @@
 import DB from './db.js';
 
+import { validationResult } from 'express-validator';
+
 const db = new DB();
 await db.connect();
 
@@ -31,10 +33,11 @@ const api = {
             return res.status(422).json({ errors: errors.array() });
         }
 
-        const { title, due, status } = req.body;
+        const { title, due, status, text } = req.body;
         const newTodo = {
             title,
             due,
+            text,
             status: status ?? 'open'
         };
         const inserted = await db.insert(newTodo);
@@ -50,7 +53,7 @@ const api = {
         if (!errors.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         }
-        
+
         const id = req.params.id;
         const updated = await db.update(id, req.body);
         if (updated.modifiedCount > 0) {

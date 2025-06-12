@@ -215,7 +215,10 @@ async function saveEdit(id) {
         }
     }
     else {
-        console.log('Fehler beim Speichern der Aufgabe:', response.statusText);
+        //console.log('Fehler beim Speichern der Aufgabe:', response.statusText);
+        const error = await response.json();
+        console.log('Fehler beim Speichern der Aufgabe:', error);
+        alert(error.errors ? error.errors.map(e => e.msg).join('\n') : error.error || 'Unbekannter Fehler');
     }
     
 }

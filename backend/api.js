@@ -54,8 +54,10 @@ const api = {
             return res.status(422).json({ errors: errors.array() });
         }
 
+        let { title, due, text, status } = req.body;
+
         const id = req.params.id;
-        const updated = await db.update(id, req.body);
+        const updated = await db.update(id, { title, due, text, status });
         if (updated.modifiedCount > 0) {
             const todo = await db.queryById(id);
             res.json(todo);

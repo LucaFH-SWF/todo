@@ -194,13 +194,14 @@ async function saveEdit(id) {
     let title = document.getElementById('editTitle').value;
     let due = document.getElementById('editDue').value;
     let text = document.getElementById('editText').value;
+    let status = TODOS.find(todo => todo._id === id).status;
 
     let response = await fetch(`/api/todos/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ title, due, text })
+        body: JSON.stringify({ title, due, text, status })
     });
 
     if(response.ok) {
@@ -215,7 +216,6 @@ async function saveEdit(id) {
         }
     }
     else {
-        //console.log('Fehler beim Speichern der Aufgabe:', response.statusText);
         const error = await response.json();
         console.log('Fehler beim Speichern der Aufgabe:', error);
         alert(error.errors ? error.errors.map(e => e.msg).join('\n') : error.error || 'Unbekannter Fehler');

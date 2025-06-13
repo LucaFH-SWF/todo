@@ -20,11 +20,22 @@ const todoValidationRules = [
     check('text')
         .optional()
         .isLength({ max: 500 })
-        .withMessage('Text darf maximal 500 Zeichen lang sein'),
+        .withMessage('Text darf maximal 500 Zeichen lang sein')
+        .default(''), // Standardwert für Text
     check('due')
         .isISO8601()
         .toDate()
         .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein')
+        .custom((value) => {
+            if (new Date(value) < new Date()) {
+                throw new Error('Fälligkeitsdatum darf nicht in der Vergangenheit liegen');
+            }
+            return true;
+        }),
+    check('status')
+        .isIn(['open', 'doing', 'done'])
+        .withMessage('Status muss "open", "doing" oder "done" sein')
+        .default('open') // Standardwert für Status
 ];
 
 // Alle ToDos abrufen

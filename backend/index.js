@@ -35,7 +35,6 @@ const todoValidationRules = [
     check('status')
         .isIn(['open', 'doing', 'done'])
         .withMessage('Status muss "open", "doing" oder "done" sein')
-        .default('open') // Standardwert für Status
 ];
 
 // Alle ToDos abrufen

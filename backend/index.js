@@ -37,6 +37,26 @@ const todoValidationRules = [
         .withMessage('Status muss "open", "doing" oder "done" sein')
 ];
 
+const todoValidationRulesUpdate = [
+    check('title')
+        .notEmpty()
+        .withMessage('Titel darf nicht leer sein')
+        .isLength({ min: 3 })
+        .withMessage('Titel muss mindestens 3 Zeichen lang sein'),
+    check('text')
+        .optional()
+        .isLength({ max: 500 })
+        .withMessage('Text darf maximal 500 Zeichen lang sein')
+        .default(''), // Standardwert für Text
+    check('due')
+        .isISO8601()
+        .toDate()
+        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein'),
+    check('status')
+        .isIn(['open', 'doing', 'done'])
+        .withMessage('Status muss "open", "doing" oder "done" sein')
+];
+
 // Alle ToDos abrufen
 app.get('/api/todos', api.getTodos);
 
@@ -47,7 +67,7 @@ app.get('/api/todos/:id', api.getTodo);
 app.post('/api/todos', todoValidationRules, api.newTodo);
 
 // ToDo aktualisieren
-app.put('/api/todos/:id', todoValidationRules, api.updateTodo);
+app.put('/api/todos/:id', todoValidationRulesUpdate, api.updateTodo);
 
 // ToDo löschen
 app.delete('/api/todos/:id', api.deleteTodo);

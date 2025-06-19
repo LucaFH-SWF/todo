@@ -2,8 +2,43 @@ let TODOS = [];
 
 var showDone = true;
 
+const LOGIN_URL = "https://keycloak.gawron.cloud/realms/webentwicklung/protocol/openid-connect/auth"
+
+/** Check whether we need to login.
+ * Check the status of a response object. If the status is 401, construct an appropriate 
+ * login URL and redict there.
+ * 
+ * @param response Response object to check
+ * @returns original response object if status is not 401
+ */
+function checkLogin(response) {
+    // check if we need to login
+    if (response.status == 401) {
+        //console.log("GET %s returned 401, need to log in", API)
+        console.log("GET request returned 401, need to log in")
+        let state = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith("state="))
+            ?.split("=")[1]
+        console.log("state: %s", state)
+        let params = new URLSearchParams()
+        params.append("response_type", "code")
+        params.append("redirect_uri", new URL("/oauth_callback", window.location))
+        params.append("client_id", "todo-backend")
+        params.append("scope", "openid")
+        params.append("state", state)
+
+        // redirect to login URL with proper parameters
+        window.location = LOGIN_URL + "?" + params.toString()
+        throw ("Need to log in")
+    }
+    else return response
+}
+
 async function init() {
-    let response = await fetch('/api/todos');
+    let response = await fetch('/api/todos')
+    .then(checkLogin);
+
     if (response.ok) {
         TODOS = await response.json();
     }
@@ -84,14 +119,15 @@ async function updateTodoStatus(id, status) {
     let title = todo.title;
     let due = todo.due;
     let text = todo.text;
+    let userId = todo.userId;
     
     let response = await fetch(`/api/todos/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({title, due, text, status})
-    });
+        body: JSON.stringify({title, due, text, status, userId})
+    }).then(checkLogin);
     
     if(response.ok) {
         todo.status = status;
@@ -122,7 +158,8 @@ async function addTodo() {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(newTodo)
-    });
+    })
+    .then(checkLogin);
 
     if(response.ok) {
         const createdTodo = await response.json();
@@ -144,7 +181,8 @@ async function addTodo() {
 async function deleteTodo(id) {
     let response = await fetch(`/api/todos/${id}`, {
         method: 'DELETE'
-    });
+    })
+    .then(checkLogin);
 
     if(response.ok) {
         let todoIndex = TODOS.findIndex(todo => todo._id === id);
@@ -202,7 +240,8 @@ async function saveEdit(id) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ title, due, text, status })
-    });
+    })
+    .then(checkLogin);
 
     if(response.ok) {
         const todo = TODOS.find(todo => todo._id === id);

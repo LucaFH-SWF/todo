@@ -1,6 +1,10 @@
 import DB from './db.js';
 
 import { validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'geheimnis';
 
 const db = new DB();
 await db.connect();
@@ -9,7 +13,7 @@ const api = {
 
     // Alle ToDos abrufen
     getTodos: async function (req, res) {
-        const todos = await db.queryAll();
+        const todos = await db.queryAll(req);
         if (!todos || todos.length === 0) {
             return res.status(404).json({ error: 'Keine ToDos gefunden' });
         }
@@ -38,7 +42,8 @@ const api = {
             title,
             due,
             text,
-            status: status ?? 'open'
+            status: status ?? 'open',
+            userId: req.user.sub
         };
         const inserted = await db.insert(newTodo);
         if (!inserted) {
@@ -55,11 +60,12 @@ const api = {
         }
 
         let { title, due, text, status } = req.body;
+        let userId = req.user.sub;
 
         const id = req.params.id;
-        const updated = await db.update(id, { title, due, text, status });
+        const updated = await db.update(id, { title, due, text, status, userId});
         if (updated.modifiedCount > 0) {
-            const todo = await db.queryById(id);
+            const todo = await db.queryById(req, id);
             res.json(todo);
         } else {
             res.status(404).json({ error: 'ToDo nicht gefunden' });
@@ -75,7 +81,9 @@ const api = {
         } else {
             res.status(404).json({ error: 'ToDo nicht gefunden' });
         }
-    }
+    },
+
+    
 }
 
 export default api;

@@ -5,6 +5,7 @@ const MONGO_DB = process.env.MONGO_DB || 'todos';
 
 let db = null;
 let collection = null;
+let collection_users = null;
 export default class DB {
     connect() {
         return MongoClient.connect(MONGO_URI)
@@ -14,12 +15,13 @@ export default class DB {
             })
     }
 
-    queryAll() {
-        return collection.find().toArray();
+    queryAll(req) {
+        let userId = req.user.sub;
+        return collection.find({ userId: userId }).toArray();
     }
 
-    queryById(id) {
-        return collection.findOne({ _id: new ObjectId(id) });
+    queryById(req, id) {
+        return collection.findOne({ _id: new ObjectId(id), userId: req.user.sub });
     }
 
     update(id, order) {

@@ -23,9 +23,17 @@ const api = {
     // ein ToDo abrufen
     getTodo: async function (req, res) {
         const id = req.params.id;
-        const todo = await db.queryById(id);
-        if (!todo) {
-            return res.status(404).json({ error: 'ToDo nicht gefunden' });
+        let todo = null;
+        try {
+            todo = await db.queryById(req,id);
+        } catch (err) {
+            if (err.message === 'Todo not found') {
+                return res.status(404).json({ error: 'ToDo nicht gefunden' });
+            } else if (err.status === 403) {
+                return res.status(403).json({ error: 'Zugriff verweigert' });
+            } else {
+                return res.status(500).json({ error: 'Interner Serverfehler' });
+            }
         }
         res.json(todo);
     },
@@ -60,10 +68,24 @@ const api = {
         }
 
         let { title, due, text, status } = req.body;
-        let userId = req.user.sub;
 
         const id = req.params.id;
-        const updated = await db.update(id, { title, due, text, status, userId});
+
+        let updated = null;
+        
+        try{
+            updated = await db.update(req, id, { title, due, text, status});
+        } catch (err) {
+            if (err.status === 404) {
+                return res.status(404).json({ error: 'ToDo nicht gefunden' });
+            } else if (err.status === 403) {
+                return res.status(403).json({ error: 'Zugriff verweigert' });
+            } else {
+                return res.status(500).json({ error: 'Interner Serverfehler' });
+            }
+        }
+        
+
         if (updated.modifiedCount > 0) {
             const todo = await db.queryById(req, id);
             res.json(todo);
@@ -75,8 +97,22 @@ const api = {
     // ToDo löschen
     deleteTodo: async function(req, res) {
         const id = req.params.id;
-        const result = await db.delete(id);
-        if (result.deletedCount > 0) {
+
+        let result = null;
+
+        try{
+            result = await db.delete(req, id);
+        } catch (err) {
+            if (err.status === 404) {
+                return res.status(404).json({ error: 'ToDo nicht gefunden' });
+            } else if (err.status === 403) {
+                return res.status(403).json({ error: 'Zugriff verweigert' });
+            } else {
+                return res.status(500).json({ error: 'Interner Serverfehler' });
+            }
+        }
+        
+        if (result && result.deletedCount > 0) {
             res.status(204).end();
         } else {
             res.status(404).json({ error: 'ToDo nicht gefunden' });

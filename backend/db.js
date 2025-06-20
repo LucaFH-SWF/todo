@@ -5,7 +5,13 @@ const MONGO_DB = process.env.MONGO_DB || 'todos';
 
 let db = null;
 let collection = null;
-let collection_users = null;
+
+function makeError(msg, status) {
+    const err = new Error(msg);
+    err.status = status;
+    return err;
+}
+
 export default class DB {
     connect() {
         return MongoClient.connect(MONGO_URI)
@@ -17,18 +23,47 @@ export default class DB {
 
     queryAll(req) {
         let userId = req.user.sub;
-        return collection.find({ userId: userId }).toArray();
+        return collection.find({ userId }).toArray();
     }
 
-    queryById(req, id) {
-        return collection.findOne({ _id: new ObjectId(id), userId: req.user.sub });
+    async queryById(req, id) {
+        let todo = await collection.findOne({ _id: new ObjectId(id) });
+        if (!todo) {
+            throw new Error('Todo not found');
+        }
+        if (todo.userId !== req.user.sub) {
+            throw makeError('Forbidden', 403);
+        }
+        return todo;
     }
 
-    update(id, order) {
+    async update(req, id, order) {
+        let todo = await collection.findOne({ _id: new ObjectId(id) });
+            
+        if (!todo) {
+            const err = new Error('Todo not found');
+            err.status = 404;
+            throw err;
+        }
+        if (todo.userId !== req.user.sub) {
+            throw makeError('Forbidden', 403);
+        }
+            
+        order.userId = req.user.sub;
         return collection.replaceOne({ _id: new ObjectId(id) }, order)
     }
 
-    delete(id) {
+    async delete(req, id) {
+        let todo = await collection.findOne({ _id: new ObjectId(id) });
+            
+        if (!todo) {
+            throw makeError('Todo not found', 404);
+        }
+
+        if (todo.userId !== req.user.sub) {
+            throw makeError('Forbidden', 403);
+        }
+            
         return collection.deleteOne({ _id: new ObjectId(id) });
     }
 

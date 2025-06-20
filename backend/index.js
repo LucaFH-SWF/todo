@@ -92,7 +92,6 @@ app.get('/oauth_callback', async (req, res) => {
         params.append('code', code);
         params.append('redirect_uri', REDIRECT_URI);
         params.append('client_id', 'todo-backend');
-        // params.append('client_secret', 'HIER_CLIENT_SECRET'); // nur falls nötig
 
         const tokenResponse = await fetch('https://keycloak.gawron.cloud/realms/webentwicklung/protocol/openid-connect/token', {
             method: 'POST',
@@ -107,7 +106,7 @@ app.get('/oauth_callback', async (req, res) => {
 
         const tokenData = await tokenResponse.json();
 
-        // JWT als Cookie setzen (secure: true für Codespaces!)
+        // JWT als Cookie setzen
         res.cookie('token', tokenData.access_token, { httpOnly: true, sameSite: 'lax', secure: true });
         res.redirect('/');
     } catch (e) {

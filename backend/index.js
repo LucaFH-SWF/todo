@@ -11,6 +11,9 @@ import passport from './auth.js';
 
 import fetch from 'node-fetch';
 
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+
 /** Zentrales Objekt für unsere Express-Applikation */
 const app = express();
 app.use(express.json());
@@ -61,9 +64,75 @@ const todoValidationRulesInsert = [
         .withMessage('_id darf beim Anlegen nicht gesetzt sein')
 ];
 
+//swagger
+const swaggerOptions = {
+    swaggerDefinition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Todo API',
+            version: '1.0.0',
+            description: 'Todo API Dokumentation',
+        },
+        servers: [
+            {
+                url: 'http://localhost:3000',
+            },
+        ],
+        components: {
+            schemas: {
+                Todo: {
+                    type: 'object',
+                    properties: {
+                        title: {
+                            type: 'string',
+                        },
+                        due: {
+                            type: 'string',
+                        },
+                        status: {
+                            type: 'integer',
+                        },
+                    },
+                },
+            },
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                }
+            },
+        },
+        security: [
+            {
+                bearerAuth: []
+            }
+        ],
+    },
+    apis: ['./index.js'], 
+};
 
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
-// Alle ToDos abrufen
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+/**
+ * Alle ToDos abrufen
+ * @swagger
+ * /todos:
+ *  get:
+ *    summary: Gibt alle Todos zurück
+ *    tags: [Todos]
+ *    responses:
+ *      '200':
+ *        description: Eine Liste aller Todos
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                $ref: '#/components/schemas/Todo'
+ */
 app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getTodos);
 
 // ein ToDo abrufen

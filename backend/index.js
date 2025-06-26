@@ -30,6 +30,21 @@ const todoValidationRules = [
         .isLength({ max: 500 })
         .withMessage('Text darf maximal 500 Zeichen lang sein')
         .default(''), // Standardwert für Text
+    check('status')
+        .isIn(['open', 'doing', 'done'])
+        .withMessage('Status muss "open", "doing" oder "done" sein')
+]
+
+const todoValidationRulesUpdate = [
+    ...todoValidationRules,
+    check('due')
+        .isISO8601()
+        .toDate()
+        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein')
+];
+
+const todoValidationRulesInsert = [
+    ...todoValidationRules,
     check('due')
         .isISO8601()
         .toDate()
@@ -40,30 +55,13 @@ const todoValidationRules = [
             }
             return true;
         }),
-    check('status')
-        .isIn(['open', 'doing', 'done'])
-        .withMessage('Status muss "open", "doing" oder "done" sein')
+    check('_id')
+        .not()
+        .exists()
+        .withMessage('_id darf beim Anlegen nicht gesetzt sein')
 ];
 
-const todoValidationRulesUpdate = [
-    check('title')
-        .notEmpty()
-        .withMessage('Titel darf nicht leer sein')
-        .isLength({ min: 3 })
-        .withMessage('Titel muss mindestens 3 Zeichen lang sein'),
-    check('text')
-        .optional()
-        .isLength({ max: 500 })
-        .withMessage('Text darf maximal 500 Zeichen lang sein')
-        .default(''), // Standardwert für Text
-    check('due')
-        .isISO8601()
-        .toDate()
-        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein'),
-    check('status')
-        .isIn(['open', 'doing', 'done'])
-        .withMessage('Status muss "open", "doing" oder "done" sein')
-];
+
 
 // Alle ToDos abrufen
 app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getTodos);
@@ -72,10 +70,10 @@ app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getT
 app.get('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.getTodo);
 
 // Neues ToDo anlegen
-app.post('/api/todos', todoValidationRules, passport.authenticate('jwt', { session: false }), api.newTodo);
+app.post('/api/todos', passport.authenticate('jwt', { session: false }), todoValidationRulesInsert, api.newTodo);
 
 // ToDo aktualisieren
-app.put('/api/todos/:id', todoValidationRulesUpdate, passport.authenticate('jwt', { session: false }), api.updateTodo);
+app.put('/api/todos/:id', passport.authenticate('jwt', { session: false }), todoValidationRulesUpdate, api.updateTodo);
 
 // ToDo löschen
 app.delete('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.deleteTodo);

@@ -43,7 +43,9 @@ const todoValidationRulesUpdate = [
     check('due')
         .isISO8601()
         .toDate()
-        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein')
+        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein'),
+    check('_id')
+        .exists()
 ];
 
 const todoValidationRulesInsert = [
@@ -87,19 +89,23 @@ const swaggerOptions = {
                         title: {
                             type: 'string',
                             description: 'Titel des Todos',
+                            example: 'Neues Todo'
                         },
                         text: {
                             type: 'string',
                             description: 'Beschreibung oder Text des Todos',
+                            default: ''
                         },
                         due: {
                             type: 'string',
                             description: 'Fälligkeitsdatum des Todos (ISO 8601 Datum als String)',
+                            example: '2025-12-31T23:59:59.000Z'
                         },
                         status: {
                             type: 'string',
                             enum: ['open', 'doing', 'done'],
                             description: 'Status des Todos: open, doing oder done',
+                            default: 'open'
                         },
                     },
                 },
@@ -125,8 +131,9 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Alle Todos abrufen
 /**
+ * Alle Todos abrufen
+ * 
  * @swagger
  * /api/todos:
  *   get:
@@ -142,11 +149,16 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Todo'
+ *       400:
+ *         description: Ungültige Eingabe
+ *       401:
+ *         description: Nicht autorisiert
  */
 app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getTodos);
 
-// ein ToDo abrufen
 /**
+ * ein ToDo abrufen
+ * 
  * @swagger
  * /api/todos/{id}:
  *   get:
@@ -166,11 +178,16 @@ app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getT
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Todo'
+ *       400:
+ *         description: Ungültige Eingabe
+ *       401:
+ *         description: Nicht autorisiert
  */
 app.get('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.getTodo);
 
-// Neues ToDo anlegen
 /**
+ *  Neues ToDo anlegen
+ * 
  * @swagger
  * /api/todos:
  *   post:
@@ -186,11 +203,16 @@ app.get('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.
  *     responses:
  *       201:
  *         description: Todo wurde erstellt
+ *       400:
+ *         description: Ungültige Eingabe
+ *       401:
+ *         description: Nicht autorisiert
  */
 app.post('/api/todos', passport.authenticate('jwt', { session: false }), todoValidationRulesInsert, api.newTodo);
 
-// ToDo aktualisieren
 /**
+ * ToDo aktualisieren
+ * 
  * @swagger
  * /api/todos/{id}:
  *   put:
@@ -212,11 +234,16 @@ app.post('/api/todos', passport.authenticate('jwt', { session: false }), todoVal
  *     responses:
  *       200:
  *         description: Todo wurde aktualisiert
+ *       400:
+ *         description: Ungültige Eingabe
+ *       401:
+ *         description: Nicht autorisiert
  */
 app.put('/api/todos/:id', passport.authenticate('jwt', { session: false }), todoValidationRulesUpdate, api.updateTodo);
 
-// ToDo löschen
 /**
+ * ToDo löschen
+ * 
  * @swagger
  * /api/todos/{id}:
  *   delete:
@@ -232,6 +259,10 @@ app.put('/api/todos/:id', passport.authenticate('jwt', { session: false }), todo
  *     responses:
  *       200:
  *         description: Todo wurde gelöscht
+ *       400:
+ *         description: Ungültige Eingabe
+ *       401:
+ *         description: Nicht autorisiert
  */
 app.delete('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.deleteTodo);
 

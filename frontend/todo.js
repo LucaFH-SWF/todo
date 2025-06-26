@@ -14,7 +14,6 @@ const LOGIN_URL = "https://keycloak.gawron.cloud/realms/webentwicklung/protocol/
 function checkLogin(response) {
     // check if we need to login
     if (response.status == 401) {
-        //console.log("GET %s returned 401, need to log in", API)
         console.log("GET request returned 401, need to log in")
         let state = document.cookie
             .split('; ')
@@ -201,6 +200,12 @@ async function deleteTodo(id) {
     }
 }
 
+function toDatetimeLocalValue(date) {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60000);
+    return localDate.toISOString().slice(0, 16);
+}
+
 function editTodo(id) {
     const todo = TODOS.find(todo => todo._id === id);
     if (todo) {
@@ -208,8 +213,7 @@ function editTodo(id) {
         elem.innerHTML = '';
 
         const due = new Date(todo.due);
-        due.setHours(due.getHours() + 2); // UTC+2 für Mitteleuropäische Sommerzeit
-        const formattedDate = due.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+        const formattedDate = toDatetimeLocalValue(due); // Lokale Zeit!
 
         elem.insertAdjacentHTML('beforeend', `
             <div>
@@ -231,6 +235,7 @@ function editTodo(id) {
 async function saveEdit(id) {
     let title = document.getElementById('editTitle').value;
     let due = document.getElementById('editDue').value;
+    let dueUTC = new Date(due).toISOString()
     let text = document.getElementById('editText').value;
     let status = TODOS.find(todo => todo._id === id).status;
 
@@ -239,7 +244,7 @@ async function saveEdit(id) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ title, due, text, status })
+        body: JSON.stringify({ title, due:dueUTC, text, status })
     })
     .then(checkLogin);
 

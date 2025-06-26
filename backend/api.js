@@ -1,10 +1,6 @@
 import DB from './db.js';
 
 import { validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'geheimnis';
 
 const db = new DB();
 await db.connect();

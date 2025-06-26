@@ -64,7 +64,8 @@ const todoValidationRulesInsert = [
         .withMessage('_id darf beim Anlegen nicht gesetzt sein')
 ];
 
-//swagger
+//swagger middleware
+const PORT = process.env.PORT || 3000;
 const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
@@ -75,7 +76,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: 'http://localhost:3000',
+                url: `https://${process.env.CODESPACE_NAME}-${PORT}.app.github.dev`,
             },
         ],
         components: {
@@ -85,12 +86,20 @@ const swaggerOptions = {
                     properties: {
                         title: {
                             type: 'string',
+                            description: 'Titel des Todos',
+                        },
+                        text: {
+                            type: 'string',
+                            description: 'Beschreibung oder Text des Todos',
                         },
                         due: {
                             type: 'string',
+                            description: 'Fälligkeitsdatum des Todos (ISO 8601 Datum als String)',
                         },
                         status: {
-                            type: 'integer',
+                            type: 'string',
+                            enum: ['open', 'doing', 'done'],
+                            description: 'Status des Todos: open, doing oder done',
                         },
                     },
                 },
@@ -116,41 +125,119 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+// Alle Todos abrufen
 /**
- * Alle ToDos abrufen
  * @swagger
- * /todos:
- *  get:
- *    summary: Gibt alle Todos zurück
- *    tags: [Todos]
- *    responses:
- *      '200':
- *        description: Eine Liste aller Todos
- *        content:
- *          application/json:
- *            schema:
- *              type: array
- *              items:
- *                $ref: '#/components/schemas/Todo'
+ * /api/todos:
+ *   get:
+ *     summary: Alle Todos abrufen
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste aller Todos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Todo'
  */
 app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getTodos);
 
 // ein ToDo abrufen
+/**
+ * @swagger
+ * /api/todos/{id}:
+ *   get:
+ *     summary: Ein Todo abrufen
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Ein Todo
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Todo'
+ */
 app.get('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.getTodo);
 
 // Neues ToDo anlegen
+/**
+ * @swagger
+ * /api/todos:
+ *   post:
+ *     summary: Neues Todo anlegen
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Todo'
+ *     responses:
+ *       201:
+ *         description: Todo wurde erstellt
+ */
 app.post('/api/todos', passport.authenticate('jwt', { session: false }), todoValidationRulesInsert, api.newTodo);
 
 // ToDo aktualisieren
+/**
+ * @swagger
+ * /api/todos/{id}:
+ *   put:
+ *     summary: Todo aktualisieren
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Todo'
+ *     responses:
+ *       200:
+ *         description: Todo wurde aktualisiert
+ */
 app.put('/api/todos/:id', passport.authenticate('jwt', { session: false }), todoValidationRulesUpdate, api.updateTodo);
 
 // ToDo löschen
+/**
+ * @swagger
+ * /api/todos/{id}:
+ *   delete:
+ *     summary: Todo löschen
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Todo wurde gelöscht
+ */
 app.delete('/api/todos/:id', passport.authenticate('jwt', { session: false }), api.deleteTodo);
 
 app.get('/oauth_callback', async (req, res) => {
     try {
         const code = req.query.code;
-        const PORT = process.env.PORT || 3000;
         const HOST = `${process.env.CODESPACE_NAME}-${PORT}.app.github.dev`;
         const REDIRECT_URI = `https://${HOST}/oauth_callback`;
 
@@ -192,7 +279,6 @@ app.get('/', (req, res) => {
 });
 
 // Server starten
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`http://localhost:${PORT}/todo.html`);
 });

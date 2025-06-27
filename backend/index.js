@@ -45,7 +45,9 @@ const todoValidationRulesUpdate = [
         .toDate()
         .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein'),
     check('_id')
+        .not()
         .exists()
+        .withMessage('_id darf beim update nicht gesetzt sein')
 ];
 
 const todoValidationRulesInsert = [
@@ -109,6 +111,42 @@ const swaggerOptions = {
                         },
                     },
                 },
+                getTodo: {
+                    type: 'object',
+                    properties: {
+                        _id:{
+                            type: 'string',
+                            description: 'MongoDB ObjectID',
+                            example: '685d4a1b5fe417b41057e942'
+                        },
+                        title: {
+                            type: 'string',
+                            description: 'Titel des Todos',
+                            example: 'Todo'
+                        },
+                        text: {
+                            type: 'string',
+                            description: 'Beschreibung oder Text des Todos',
+                            default: ''
+                        },
+                        due: {
+                            type: 'string',
+                            description: 'Fälligkeitsdatum des Todos (ISO 8601 Datum als String)',
+                            example: '2025-12-31T23:59:59.000Z'
+                        },
+                        status: {
+                            type: 'string',
+                            enum: ['open', 'doing', 'done'],
+                            description: 'Status des Todos: open, doing oder done',
+                            default: 'open'
+                        },
+                        userId:{
+                            type: 'string',
+                            description: 'userId String',
+                            example: '685d4a1b5fe417b41057e942'
+                        }
+                    },
+                },
             },
             securitySchemes: {
                 bearerAuth: {
@@ -148,7 +186,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Todo'
+ *                 $ref: '#/components/schemas/getTodo'
  *       400:
  *         description: Ungültige Eingabe
  *       401:
@@ -177,7 +215,7 @@ app.get('/api/todos', passport.authenticate('jwt', { session: false }), api.getT
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Todo'
+ *               $ref: '#/components/schemas/getTodo'
  *       400:
  *         description: Ungültige Eingabe
  *       401:
@@ -258,7 +296,11 @@ app.put('/api/todos/:id', passport.authenticate('jwt', { session: false }), todo
  *           type: string
  *     responses:
  *       200:
- *         description: Todo wurde gelöscht
+ *         description: ToDO wurde gelöscht
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/getTodo'
  *       400:
  *         description: Ungültige Eingabe
  *       401:

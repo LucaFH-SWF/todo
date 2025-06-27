@@ -43,11 +43,7 @@ const todoValidationRulesUpdate = [
     check('due')
         .isISO8601()
         .toDate()
-        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein'),
-    check('_id')
-        .not()
-        .exists()
-        .withMessage('_id darf beim update nicht gesetzt sein')
+        .withMessage('Fälligkeitsdatum muss ein gültiges Datum sein')
 ];
 
 const todoValidationRulesInsert = [
@@ -295,12 +291,8 @@ app.put('/api/todos/:id', passport.authenticate('jwt', { session: false }), todo
  *         schema:
  *           type: string
  *     responses:
- *       200:
+ *       204:
  *         description: ToDO wurde gelöscht
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/getTodo'
  *       400:
  *         description: Ungültige Eingabe
  *       401:
